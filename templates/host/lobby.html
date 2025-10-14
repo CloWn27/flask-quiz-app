@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - PIN: {{ pin }} | Quiz Host</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+<div class="main-container">
+    <div class="card fade-in">
+        <h1 style="color:var(--text-bright); text-align:center;">
+            <span style="font-size: 1.5rem; display:block; color:var(--accent-cyan);">QUIZ LOBBY</span>
+            {{ pin }}
+        </h1>
+        <p style="text-align: center; color: var(--text-dim); margin-top: -1rem; margin-bottom: 2rem;">
+            Teilen Sie diese PIN mit den Teilnehmern
+        </p>
+
+        <div class="card"
+             style="background:var(--secondary-bg); display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding:1rem;">
+            <div><strong>Host:</strong> {{ game.host_name }}</div>
+            <div><strong>Fragen:</strong> {{ game.questions|length }}</div>
+            <div id="player-count"><strong>Spieler:</strong> <span id="count">{{ players|length }}</span></div>
+        </div>
+
+        <h3 style="text-align: center; margin-bottom: 1rem;">👥 WARTENDE SPIELER</h3>
+        <div id="player-list" style="margin-bottom: 2rem;">
+            <div id="players-container" class="leaderboard">
+                {% for player in players %}
+                <div class="leaderboard-item" data-player-id="{{ player.id }}">
+                    <div class="player-name">{{ player.name }}</div>
+                    <div style="color: var(--success);">Bereit</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div id="no-players"
+                 style="text-align: center; padding: 2rem; color: var(--text-dim); {% if players %}display: none;{% endif %}">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⏰</div>
+                <p>Noch keine Spieler beigetreten...</p>
+                
+                <div id="join-urls"
+                     style="font-size: 0.9rem; margin-top: 1rem; padding: 1rem; background: var(--secondary-bg); border-radius: 8px;">
+                    <p><strong>🌐 Spieler können beitreten unter:</strong></p>
+                    <p style="color: var(--accent-purple); font-weight: bold;">
+                        <a href="{{ network_urls.join_url }}" target="_blank">{{ network_urls.join_url }}</a>
+                    </p>
+                    
+                    {% if network_urls.join_qr %}
+                    <div style="margin-top: 1rem;">
+                        <p><strong>📱 QR-Code scannen:</strong></p>
+                        <img src="{{ network_urls.join_qr }}" alt="QR Code for joining" 
+                             style="width: 150px; height: 150px; border: 2px solid var(--border-color); border-radius: 8px;"/>
+                        <p style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">Mit Handy-Kamera scannen</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button id="start-game-btn" class="btn btn-success" {% if not players %}disabled{% endif %}
+                    onclick="startGame()">
+                🚀 Spiel starten
+            </button>
+            <button class="btn btn-warning" onclick="copyPin()">
+                📋 PIN kopieren
+            </button>
+            <a href="{{ url_for('host.host_dashboard') }}" class="btn btn-danger">
+                🚪 Spiel beenden
+            </a>
+        </div>
+    </div>
+
+    <div class="card slide-up">
+        <h3>📋 ANWEISUNGEN FÜR TEILNEHMER</h3>
+        <div id="network-info-card"
+             style="margin-bottom: 2rem; padding: 1rem; background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 12px;">
+            <h4 style="margin-bottom: 1rem;">🌐 NETZWERK-ZUGANG:</h4>
+            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--accent-cyan);">
+                <a href="{{ network_urls.local_url }}" target="_blank">{{ network_urls.local_url }}</a>
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 1rem;">Teilen Sie diese URL mit allen Teilnehmern</p>
+            
+            {% if network_urls.local_qr %}
+            <div style="text-align: center;">
+                <p><strong>📱 Oder QR-Code teilen:</strong></p>
+                <img src="{{ network_urls.local_qr }}" alt="QR Code for main page" 
+                     style="width: 120px; height: 120px; border: 2px solid var(--border-color); border-radius: 8px;"/>
+            </div>
+            {% endif %}
+        </div>
+        <ol style="line-height: 1.8;">
+            <li>Gehen Sie zur <strong>Netzwerk-URL</strong> oben ↑</li>
+            <li>Klicken Sie auf <strong>"PIN eingeben"</strong></li>
+            <li>Geben Sie die PIN ein: <strong>{{ pin }}</strong></li>
+            <li>Wählen Sie einen Spielernamen</li>
+            <li>Warten Sie, bis das Spiel startet</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    const socket = io();
+    const pin = '{{ pin }}';
+    let playerCount = {
+    {
+        players | length
+    }
+    }
+    ;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        socket.emit('join_room', {pin: pin});
+    });
+
+    socket.on('player_joined', function (data) {
+        updatePlayerList(data.players);
+        updatePlayerCount(data.player_count);
+    });
+
+    socket.on('player_left', function (data) {
+        const playerEl = document.querySelector(`[data-player-id="${data.id}"]`);
+        if (playerEl) playerEl.remove();
+        updatePlayerCount(data.player_count);
+    });
+
+    function updatePlayerList(players) {
+        const container = document.getElementById('players-container');
+        container.innerHTML = '';
+        players.forEach(player => {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'leaderboard-item';
+            playerDiv.setAttribute('data-player-id', player.id);
+            playerDiv.innerHTML = `<div class="player-name">${player.name}</div><div style="color: var(--success);">Bereit</div>`;
+            container.appendChild(playerDiv);
+        });
+    }
+
+    function updatePlayerCount(count) {
+        document.getElementById('count').textContent = count;
+        playerCount = count;
+        document.getElementById('no-players').style.display = count > 0 ? 'none' : 'block';
+        document.getElementById('start-game-btn').disabled = count === 0;
+    }
+
+    function startGame() {
+        if (playerCount > 0) window.location.href = `/host/control/${pin}`;
+    }
+
+    function copyPin() {
+        navigator.clipboard.writeText("{{pin}}")
+    }
+
+</script>
+</body>
+</html>

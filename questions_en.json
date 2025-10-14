@@ -1,0 +1,178 @@
+{
+  "easy": [
+    {
+      "question": "What is debugging?",
+      "answer": "Finding errors",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "question": "How many bits are in a byte?",
+      "options": [
+        "4",
+        "8",
+        "16",
+        "32"
+      ],
+      "answer": "8",
+      "difficulty": "easy",
+      "type": "mc"
+    },
+    {
+      "question": "What is Python?",
+      "answer": "A programming language",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "question": "Which of these is a programming language?",
+      "options": [
+        "HTML",
+        "CSS",
+        "Python",
+        "Excel"
+      ],
+      "answer": "Python",
+      "difficulty": "easy",
+      "type": "mc"
+    },
+    {
+      "question": "What is a bug?",
+      "answer": "An error in the code",
+      "difficulty": "easy",
+      "type": "text"
+    }
+  ],
+  "medium": [
+    {
+      "question": "What does SQL stand for?",
+      "answer": "Structured Query Language",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "question": "Which command is used to retrieve data in SQL?",
+      "options": [
+        "INSERT",
+        "SELECT",
+        "DELETE",
+        "UPDATE"
+      ],
+      "answer": "SELECT",
+      "difficulty": "medium",
+      "type": "mc"
+    },
+    {
+      "question": "What is a variable?",
+      "answer": "A container for storing data values",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "question": "Which of these is a loop in Python?",
+      "options": [
+        "if",
+        "for",
+        "print",
+        "def"
+      ],
+      "answer": "for",
+      "difficulty": "medium",
+      "type": "mc"
+    },
+    {
+      "question": "What is a database?",
+      "answer": "A system for storing and managing data",
+      "difficulty": "medium",
+      "type": "text"
+    }
+  ],
+  "hard": [
+    {
+      "question": "What is the purpose of unit testing?",
+      "answer": "To test individual components of software",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Which model is iterative?",
+      "options": [
+        "Waterfall",
+        "V-model",
+        "Scrum",
+        "Big Bang"
+      ],
+      "answer": "Scrum",
+      "difficulty": "hard",
+      "type": "mc"
+    },
+    {
+      "question": "What is a function?",
+      "answer": "A block of code that performs a specific task",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Which of these is NOT a data type in Python?",
+      "options": [
+        "int",
+        "str",
+        "float",
+        "loop"
+      ],
+      "answer": "loop",
+      "difficulty": "hard",
+      "type": "mc"
+    },
+    {
+      "question": "What is a class in Python?",
+      "answer": "A blueprint for creating objects",
+      "difficulty": "hard",
+      "type": "text"
+    }
+  ],
+  "heavy": [
+    {
+      "question": "What is encapsulation in OOP?",
+      "answer": "Hiding internal details of objects",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Which principle is part of SOLID?",
+      "options": [
+        "Single Responsibility",
+        "Simple Logic",
+        "Secure Runtime",
+        "Safe Output"
+      ],
+      "answer": "Single Responsibility",
+      "difficulty": "heavy",
+      "type": "mc"
+    },
+    {
+      "question": "What is polymorphism?",
+      "answer": "Ability of different objects to respond to the same method",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Which of these is a relational database?",
+      "options": [
+        "MongoDB",
+        "MySQL",
+        "Redis",
+        "Firebase"
+      ],
+      "answer": "MySQL",
+      "difficulty": "heavy",
+      "type": "mc"
+    },
+    {
+      "question": "What is inheritance in programming?",
+      "answer": "When a class derives properties from another class",
+      "difficulty": "heavy",
+      "type": "text"
+    }
+  ]
+}

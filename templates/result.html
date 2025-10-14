@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% set percentage = (score/total*100)|round(1) %}
+    <title>
+        {% if percentage >= 80 %}🏆 VICTORY ACHIEVED{% elif percentage >= 60 %}⚔️ MISSION COMPLETE{% else %}⚠️ TACTICAL
+        RETREAT{% endif %} | CYBER QUIZ
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyberpunk.css') }}">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>{% if percentage >= 80 %}🏆{% elif percentage >= 60 %}⚔️{% else %}⚠️{% endif %}</text></svg>">
+</head>
+<body>
+<div class="main-container">
+    {% set percentage = (score/total*100)|round(1) %}
+
+    <!-- Epic Results Header -->
+    <div class="cyber-panel" style="margin-bottom: 2rem; text-align: center;">
+        {% if percentage >= 80 %}
+        <h1 class="result-title"
+            style="color: var(--accent-gold); animation: victoryPulse 2s ease-in-out infinite alternate;">
+            🏆 LEGENDARY VICTORY 🏆
+        </h1>
+        <p style="color: var(--success); font-family: 'Orbitron', monospace; font-size: 1.2rem; margin-top: 1rem;">
+            ✨ OUTSTANDING PERFORMANCE! YOU'VE DOMINATED THE DIGITAL BATTLEFIELD! ✨
+        </p>
+        {% elif percentage >= 60 %}
+        <h1 class="result-title" style="color: var(--accent-cyan); animation: missionComplete 1.5s ease-out;">
+            ⚔️ MISSION ACCOMPLISHED ⚔️
+        </h1>
+        <p style="color: var(--accent-cyan); font-family: 'Orbitron', monospace; font-size: 1.1rem; margin-top: 1rem;">
+            🎆 WELL FOUGHT, AGENT! OBJECTIVE SECURED! 🎆
+        </p>
+        {% else %}
+        <h1 class="result-title" style="color: var(--danger); animation: defeatShake 0.5s ease-in-out 3;">
+            ⚠️ TACTICAL RETREAT ⚠️
+        </h1>
+        <p style="color: var(--accent-orange); font-family: 'Orbitron', monospace; font-size: 1.1rem; margin-top: 1rem;">
+            🔥 REGROUP AND RETRY! EVERY LEGEND STARTED SOMEWHERE! 🔥
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Score Display Panel -->
+    <div class="cyber-panel result-container">
+        <div style="border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+            <h2 style="color: var(--accent-gold); font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem;">
+                📊 COMBAT STATISTICS
+            </h2>
+            <p style="color: var(--text-bright); font-size: 1.2rem; margin-bottom: 0.5rem;">
+                👤 <strong>AGENT:</strong> {{ session.get('player_name', 'ANONYMOUS').upper() }}
+            </p>
+        </div>
+
+        <div class="score-display">
+            {{ score }} / {{ total }}
+        </div>
+
+        <div class="percentage" style="margin-bottom: 2rem;">
+            {% if percentage >= 90 %}
+            🌟 PERFECTION RATING: {{ percentage }}% 🌟
+            {% elif percentage >= 80 %}
+            🔥 ELITE SCORE: {{ percentage }}% 🔥
+            {% elif percentage >= 60 %}
+            ⚔️ SOLID PERFORMANCE: {{ percentage }}% ⚔️
+            {% elif percentage >= 40 %}
+            🛡️ DEFENSIVE STANCE: {{ percentage }}% 🛡️
+            {% else %}
+            🔄 TRAINING MODE: {{ percentage }}% 🔄
+            {% endif %}
+        </div>
+
+        <!-- Achievement Badges -->
+        <div style="margin: 2rem 0; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(0, 255, 255, 0.2);">
+            <h3 style="color: var(--accent-purple); font-family: 'Orbitron', monospace; margin-bottom: 1rem; font-size: 1rem;">
+                🏅 ACHIEVEMENTS UNLOCKED
+            </h3>
+            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                {% if score > 0 %}
+                <span class="achievement-badge">🎆 First Blood</span>
+                {% endif %}
+                {% if percentage >= 50 %}
+                <span class="achievement-badge">🛡️ Survivor</span>
+                {% endif %}
+                {% if percentage >= 80 %}
+                <span class="achievement-badge">⚔️ Elite Agent</span>
+                {% endif %}
+                {% if score == total %}
+                <span class="achievement-badge">🏆 Perfect Score</span>
+                {% endif %}
+                {% if total >= 10 %}
+                <span class="achievement-badge">🎯 Endurance</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+            <a href="/" class="cyber-btn btn-primary">
+                🚀 NEW MISSION
+            </a>
+            <button onclick="shareResults()" class="cyber-btn btn-warning">
+                📱 SHARE VICTORY
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Panel -->
+    <div class="cyber-panel" style="margin-top: 2rem; padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; font-family: 'Orbitron', monospace; font-size: 0.9rem;">
+            <div style="color: var(--accent-cyan);">
+                📊 EFFICIENCY: {% if total > 0 %}{{ ((score/total)*100)|round(0) }}%{% else %}N/A{% endif %}
+            </div>
+            <div style="color: var(--accent-gold);">
+                ⚡ RANK:
+                {% if percentage >= 90 %}LEGENDARY
+                {% elif percentage >= 80 %}ELITE
+                {% elif percentage >= 60 %}VETERAN
+                {% elif percentage >= 40 %}SOLDIER
+                {% else %}RECRUIT{% endif %}
+            </div>
+            <div style="color: var(--accent-purple);">
+                🎆 STATUS: {% if percentage >= 60 %}PROMOTED{% else %}TRAINING{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .achievement-badge {
+        background: linear-gradient(45deg, var(--accent-purple), var(--accent-cyan));
+        color: var(--primary-dark);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-family: 'Orbitron', monospace;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        animation: badgeGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes badgeGlow {
+        from {
+            box-shadow: 0 0 5px rgba(157, 78, 221, 0.3);
+        }
+        to {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+    }
+
+    @keyframes victoryPulse {
+        from {
+            transform: scale(1);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+        to {
+            transform: scale(1.05);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 40px rgba(0, 255, 255, 0.5);
+        }
+    }
+
+    @keyframes missionComplete {
+        0% {
+            transform: scale(0.8) rotate(-5deg);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1) rotate(2deg);
+        }
+        100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+        }
+    }
+
+    @keyframes defeatShake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        25% {
+            transform: translateX(-10px);
+        }
+        75% {
+            transform: translateX(10px);
+        }
+    }
+
+    /* Particle effects for high scores */
+    {
+    %
+    if
+    percentage
+    >=
+    80
+    %
+    }
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background: radial-gradient(3px 3px at 10% 20%, var(--accent-gold), transparent),
+        radial-gradient(2px 2px at 90% 80%, var(--accent-cyan), transparent),
+        radial-gradient(1px 1px at 30% 70%, var(--accent-orange), transparent),
+        radial-gradient(2px 2px at 80% 30%, var(--accent-purple), transparent);
+        background-size: 200px 200px, 150px 150px, 100px 100px, 180px 180px;
+        animation: celebrationParticles 3s ease-in-out infinite;
+        opacity: 0.3;
+        z-index: -1;
+    }
+
+    @keyframes celebrationParticles {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+        }
+        50% {
+            transform: translate(20px, -20px) scale(1.2);
+        }
+    }
+
+    {
+    %
+    endif
+    %
+    }
+</style>
+
+<script>
+    // Epic entrance animation
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add entrance delay for dramatic effect
+        const panels = document.querySelectorAll('.cyber-panel');
+        panels.forEach((panel, index) => {
+            panel.style.opacity = '0';
+            panel.style.transform = 'translateY(50px)';
+            setTimeout(() => {
+                panel.style.transition = 'all 0.6s ease-out';
+                panel.style.opacity = '1';
+                panel.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+
+        // Victory sound simulation (visual feedback)
+        const percentage = {
+        {
+            percentage
+        }
+    }
+        ;
+        if (percentage >= 80) {
+            // Flash the screen for victory
+            setTimeout(() => {
+                document.body.style.animation = 'victoryFlash 0.5s ease-out';
+            }, 1000);
+        }
+    });
+
+    // Share results function
+    function shareResults() {
+        const percentage = {
+        {
+            percentage
+        }
+    }
+        ;
+        const name = '{{ session.get('player_name', 'Anonymous') }}';
+        const score = '{{ score }}';
+        const total = '{{ total }}';
+
+        const shareText = `🔥 CYBER QUIZ RESULTS 🔥\n` +
+                `Agent ${name}: ${score}/${total} (${percentage}%)\n` +
+                `${percentage >= 80 ? '🏆 LEGENDARY VICTORY!' :
+                        percentage >= 60 ? '⚔️ MISSION COMPLETE!' :
+                        '🔄 READY FOR RETRY!'}`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Cyber Quiz Results',
+                text: shareText
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('✅ Results copied to clipboard!');
+            }).catch(() => {
+                alert(shareText);
+            });
+        }
+    }
+
+    // Add victory flash animation
+    const style = document.createElement('style');
+    style.textContent = `
+            @keyframes victoryFlash {
+                0%, 100% { filter: brightness(1); }
+                50% { filter: brightness(1.5) saturate(1.2); }
+            }
+        `;
+    document.head.appendChild(style);
+</script>
+</body>
+</html>
