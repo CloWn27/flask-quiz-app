@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warte auf Start... | Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+<div class="main-container">
+    <div class="card game-waiting" id="wait-screen">
+        <h1 style="color: var(--text-primary);">Du bist dabei!</h1>
+        <p style="font-size: 1.2rem; color: var(--text-secondary);">
+            Warte, bis der Spielleiter das Quiz startet...
+        </p>
+        <div class="waiting-spinner"></div>
+        <div style="margin-top: 2rem;">
+            <strong>Spiel-PIN:</strong> <span style="color: var(--kahoot-purple); font-weight: bold;">{{ pin }}</span>
+        </div>
+    </div>
+
+    <div id="quiz-container" style="display: none;"></div>
+</div>
+<script>
+    const socket = io();
+    const pin = '{{ pin }}';
+    let connected = false;
+
+    // Connection handlers
+    socket.on('connect', function() {
+        console.log('Connected to server');
+        connected = true;
+        // Join the game room
+        socket.emit('join_room', {pin: pin});
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+        connected = false;
+        // Show connection lost message
+        showConnectionMessage('Verbindung zum Server verloren. Versuche erneut zu verbinden...', 'warning');
+    });
+
+    socket.on('connected', function(data) {
+        console.log('Server connection confirmed:', data.message);
+    });
+
+    socket.on('room_joined', function(data) {
+        console.log('Successfully joined room:', data.pin);
+        showConnectionMessage('Erfolgreich mit dem Spiel verbunden!', 'success');
+        // Hide connection message after 2 seconds
+        setTimeout(() => {
+            hideConnectionMessage();
+        }, 2000);
+    });
+
+    socket.on('error', function(data) {
+        console.error('SocketIO error:', data.message);
+        showConnectionMessage('Fehler: ' + data.message, 'error');
+    });
+
+    socket.on('player_connected', function(data) {
+        console.log('Another player connected:', data.message);
+        updatePlayerCount(data.total_players);
+    });
+
+    socket.on('player_disconnected', function(data) {
+        console.log('Player disconnected:', data.message);
+    });
+
+    socket.on('question_started', function (data) {
+        console.log('Question started:', data);
+        document.getElementById('wait-screen').style.display = 'none';
+        const quizContainer = document.getElementById('quiz-container');
+        quizContainer.style.display = 'block';
+        quizContainer.innerHTML = `<h1>Frage ${data.question_number}</h1><p>${data.question.question}</p>`;
+    });
+
+    socket.on('game_finished', function (data) {
+        console.log('Game finished:', data);
+        document.getElementById('wait-screen').style.display = 'none';
+        document.getElementById('quiz-container').innerHTML = `<h1>Spiel beendet!</h1>`;
+    });
+
+    // Helper functions
+    function showConnectionMessage(message, type) {
+        let messageDiv = document.getElementById('connection-message');
+        if (!messageDiv) {
+            messageDiv = document.createElement('div');
+            messageDiv.id = 'connection-message';
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 1000;
+                font-weight: bold;
+            `;
+            document.body.appendChild(messageDiv);
+        }
+        
+        messageDiv.textContent = message;
+        messageDiv.className = 'connection-message ' + type;
+        
+        // Style based on type
+        if (type === 'success') {
+            messageDiv.style.backgroundColor = '#4CAF50';
+            messageDiv.style.color = 'white';
+        } else if (type === 'warning') {
+            messageDiv.style.backgroundColor = '#FF9800';
+            messageDiv.style.color = 'white';
+        } else if (type === 'error') {
+            messageDiv.style.backgroundColor = '#F44336';
+            messageDiv.style.color = 'white';
+        }
+        
+        messageDiv.style.display = 'block';
+    }
+
+    function hideConnectionMessage() {
+        const messageDiv = document.getElementById('connection-message');
+        if (messageDiv) {
+            messageDiv.style.display = 'none';
+        }
+    }
+
+    function updatePlayerCount(count) {
+        let playerCountDiv = document.getElementById('player-count');
+        if (!playerCountDiv) {
+            playerCountDiv = document.createElement('div');
+            playerCountDiv.id = 'player-count';
+            playerCountDiv.style.cssText = 'margin-top: 1rem; font-size: 1.1rem; color: var(--text-secondary);';
+            document.querySelector('.card.game-waiting').appendChild(playerCountDiv);
+        }
+        playerCountDiv.innerHTML = `<strong>Verbundene Spieler:</strong> ${count}`;
+    }
+
+    // Ping server periodically to check connection
+    setInterval(() => {
+        if (connected) {
+            socket.emit('ping');
+        }
+    }, 30000);
+
+    socket.on('pong', function() {
+        console.log('Pong received - connection healthy');
+    });
+</script>
+</body>
+</html>

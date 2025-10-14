@@ -1,0 +1,148 @@
+{
+  "easy": [
+    {
+      "question": "Was bedeutet Debugging?",
+      "answer": "Fehlersuche",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Byte?",
+      "options": [
+        "4 Bit",
+        "8 Bit",
+        "16 Bit",
+        "1 Bit"
+      ],
+      "answer": "8 Bit",
+      "difficulty": "easy",
+      "type": "mc"
+    },
+    {
+      "question": "Was ist ein Bit?",
+      "answer": "Kleinste Informationseinheit",
+      "difficulty": "easy",
+      "type": "text"
+    },
+    {
+      "question": "Welche Programmiersprache ist besonders einfach für Einsteiger?",
+      "options": [
+        "C++",
+        "Python",
+        "Java",
+        "Rust"
+      ],
+      "answer": "Python",
+      "difficulty": "easy",
+      "type": "mc"
+    },
+    {
+      "question": "Was ist ein Compiler?",
+      "answer": "Ein Programm, das Quellcode in Maschinencode übersetzt",
+      "difficulty": "easy",
+      "type": "text"
+    }
+  ],
+  "medium": [
+    {
+      "question": "Was ist ein Repository in der Softwareentwicklung?",
+      "answer": "Ein Speicherort für Quellcode",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "question": "Welche Datenbankabfragesprache wird am häufigsten verwendet?",
+      "options": [
+        "SQL",
+        "HTML",
+        "Python",
+        "C#"
+      ],
+      "answer": "SQL",
+      "difficulty": "medium",
+      "type": "mc"
+    },
+    {
+      "question": "Was ist ein Branch in Git?",
+      "answer": "Ein paralleler Entwicklungszweig",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "question": "Was bedeutet 'commit' in Git?",
+      "answer": "Eine Änderung speichern",
+      "difficulty": "medium",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Entity-Relationship-Diagramm?",
+      "answer": "Ein Modell zur Darstellung von Datenbankstrukturen",
+      "difficulty": "medium",
+      "type": "text"
+    }
+  ],
+  "hard": [
+    {
+      "question": "Was ist ein Wasserfallmodell?",
+      "answer": "Ein lineares Vorgehensmodell in der Softwareentwicklung",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein agiles Vorgehensmodell?",
+      "answer": "Ein flexibles, iteratives Modell zur Softwareentwicklung",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Was ist Scrum?",
+      "answer": "Ein agiles Framework zur Softwareentwicklung",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Sprint in Scrum?",
+      "answer": "Ein Entwicklungszeitraum mit definierten Zielen",
+      "difficulty": "hard",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Product Owner?",
+      "answer": "Die Person, die die Anforderungen definiert",
+      "difficulty": "hard",
+      "type": "text"
+    }
+  ],
+  "heavy": [
+    {
+      "question": "Was ist ein Softwareentwicklungsprozess?",
+      "answer": "Ein strukturierter Ablauf zur Erstellung von Software",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Lebenszyklusmodell?",
+      "answer": "Ein Modell zur Beschreibung der Phasen der Softwareentwicklung",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein V-Modell?",
+      "answer": "Ein Vorgehensmodell mit paralleler Testplanung",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Was ist ein Spiralmodell?",
+      "answer": "Ein iteratives Modell mit Risikoanalyse",
+      "difficulty": "heavy",
+      "type": "text"
+    },
+    {
+      "question": "Was ist eine Blackbox-Testmethode?",
+      "answer": "Ein Test ohne Kenntnis des inneren Aufbaus",
+      "difficulty": "heavy",
+      "type": "text"
+    }
+  ]
+}

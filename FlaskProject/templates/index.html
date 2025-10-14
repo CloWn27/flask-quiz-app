@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Quiz Game - Cyber-Style</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+</head>
+<body>
+<div class="main-container">
+    <h1 class="fade-in">🎯 Interactive Quiz Game</h1>
+    <p style="text-align: center; font-size: 1.2rem; color: white; margin-bottom: 3rem; font-weight: 500;">
+        Lernen, spielen und Spaß haben - im Cyber-Style!
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages fade-in">
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="host-dashboard slide-up">
+        <div class="dashboard-card">
+            <div class="dashboard-icon">🎮</div>
+            <h3>Solo-Modus</h3>
+            <p>Spiele alleine und teste dein Wissen in verschiedenen Kategorien.</p>
+            <a href="#solo-form" class="btn btn-primary" onclick="showSoloForm()">Solo spielen</a>
+        </div>
+        <div class="dashboard-card">
+            <div class="dashboard-icon">🚀</div>
+            <h3>Spiel beitreten</h3>
+            <p>Trete einem bestehenden Quiz mit einer PIN bei.</p>
+            <a href="{{ url_for('player.join_game') }}" class="btn btn-warning">PIN eingeben</a>
+        </div>
+        <div class="dashboard-card">
+            <div class="dashboard-icon">✍️</div>
+            <h3>Als Spielleiter</h3>
+            <p>Erstelle ein Multiplayer-Quiz oder eigene Fragen-Sets.</p>
+            <a href="{{ url_for('host.host_dashboard') }}" class="btn btn-success">Quiz hosten</a>
+        </div>
+        <div class="dashboard-card">
+            <div class="dashboard-icon">💡</div>
+            <h3>Über das Quiz</h3>
+            <p>Ein interaktives Lernspiel mit verschiedenen Schwierigkeitsstufen.</p>
+            <a href="#" onclick="alert('Wissenswertes über das Quiz-Spiel!')" class="btn btn-danger">Info</a>
+        </div>
+    </div>
+
+    <div class="card slide-up" id="solo-form" style="animation-delay: 0.3s; display: none;">
+        <h2>🎮 Solo-Quiz starten</h2>
+        <form action="{{ url_for('player.start_quiz') }}" method="post" class="loading-form">
+            <div class="form-group">
+                <label class="form-label" for="player_name">Dein Name</label>
+                <input type="text" id="player_name" name="player_name" class="form-control" placeholder="Gib deinen Namen ein" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Spielmodus</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="mode_difficulty" name="mode" value="difficulty" checked>
+                        <label for="mode_difficulty">Nach Schwierigkeit</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="mode_random" name="mode" value="random">
+                        <label for="mode_random">Zufällig</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="difficulty">Schwierigkeitsgrad</label>
+                <select id="difficulty" name="difficulty" class="form-control">
+                    <option value="easy">🟢 Einfach</option>
+                    <option value="medium">🟡 Mittel</option>
+                    <option value="hard">🟠 Schwer</option>
+                    <option value="heavy">🔴 Sehr Schwer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="language">Sprache</label>
+                <select id="language" name="language" class="form-control">
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="en">🇺🇸 English</option>
+                </select>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary submit-btn">🚀 Quiz starten</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function showSoloForm() {
+        const o = document.getElementById("solo-form"), e = document.querySelector(".host-dashboard");
+        e.style.display = "none", o.style.display = "block", o.scrollIntoView({behavior: "smooth"})
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".loading-form").forEach(o => {
+            o.addEventListener("submit", function (e) {
+                const t = this.querySelector(".submit-btn");
+                t && (t.innerHTML = "🔄 Wird geladen...", t.disabled = !0)
+            })
+        })
+    });
+</script>
+</body>
+</html>

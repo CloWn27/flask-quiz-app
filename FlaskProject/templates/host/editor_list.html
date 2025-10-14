@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragen-Editor - Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+</head>
+<body>
+<div class="main-container">
+    <h1>📝 Fragen-Editor</h1>
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>Meine Quiz-Sets</h2>
+            <a href="{{ url_for('host.create_quiz_set') }}" class="btn btn-success">Neues Set erstellen</a>
+        </div>
+
+        {% if quiz_sets %}
+        {% for q_set in quiz_sets %}
+        <div class="card" style="margin-bottom: 1rem; background: var(--secondary-bg);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="color: var(--accent-gold);">{{ q_set.name }}</h3>
+                    <p style="color: var(--text-dim);">{{ q_set.questions|length }} Fragen | Erstellt am {{
+                        q_set.created_at.strftime('%d.%m.%Y') }}</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="{{ url_for('host.edit_quiz_set', set_id=q_set.id) }}"
+                       class="btn btn-primary">Bearbeiten</a>
+                    <form action="{{ url_for('host.delete_quiz_set', set_id=q_set.id) }}" method="post"
+                          onsubmit="return confirm('Sicher, dass du dieses Set löschen willst?');">
+                        <button type="submit" class="btn btn-danger">Löschen</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="text-align: center; color: var(--text-dim);">Du hast noch keine eigenen Quiz-Sets erstellt.</p>
+        {% endif %}
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ url_for('host.host_dashboard') }}" class="btn">Zurück zum Dashboard</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

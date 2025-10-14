@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if quiz_set %}Set bearbeiten{% else %}Neues Set erstellen{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+</head>
+<body>
+<div class="main-container">
+    <h1>{% if quiz_set %}{{ quiz_set.name }}{% else %}Neues Quiz-Set{% endif %}</h1>
+
+    {% if quiz_set %}
+    <div class="card">
+        <h2>Neue Frage hinzufügen</h2>
+        <form action="{{ url_for('host.edit_quiz_set', set_id=quiz_set.id) }}" method="post" id="question-form">
+            <div class="form-group">
+                <label for="question_type">Fragentyp:</label>
+                <select id="question_type" name="question_type" onchange="toggleOptions()">
+                    <option value="text">Offene Textfrage</option>
+                    <option value="mc">Multiple Choice</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="question">Frage:</label>
+                <textarea id="question" name="question" rows="2" required></textarea>
+            </div>
+            <div id="options-container" style="display: none;">
+                <div class="form-group">
+                    <label>Optionen (eine pro Zeile):</label>
+                    <textarea name="options" rows="4"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="answer">Korrekte Antwort:</label>
+                <input type="text" id="answer" name="answer" required>
+            </div>
+            <button type="submit" class="btn btn-success">Frage speichern</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Bestehende Fragen</h2>
+        {% for q in quiz_set.questions %}
+        <div class="card" style="margin-bottom: 1rem; background: var(--secondary-bg);">
+            <p><strong>Frage:</strong> {{ q.question }}</p>
+            <p style="color: var(--success);"><strong>Antwort:</strong> {{ q.answer }}</p>
+            {% if q.question_type == 'mc' %}
+            <p><strong>Optionen:</strong> {{ q.options|join(', ') }}</p>
+            {% endif %}
+            <form action="{{ url_for('host.delete_question', question_id=q.id) }}" method="post"
+                  style="text-align: right;">
+                <button type="submit" class="btn btn-danger">Löschen</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="card">
+        <form action="{{ url_for('host.create_quiz_set') }}" method="post">
+            <div class="form-group">
+                <label for="name">Name des Quiz-Sets:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <button type="submit" class="btn btn-success">Set erstellen & Fragen hinzufügen</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('host.editor_list') }}" class="btn">Zurück zur Übersicht</a>
+    </div>
+</div>
+<script>
+    function toggleOptions() {
+        const e = document.getElementById("question_type"), t = document.getElementById("options-container");
+        t.style.display = "mc" === e.value ? "block" : "none"
+    }
+
+    document.addEventListener("DOMContentLoaded", toggleOptions);
+</script>
+</body>
+</html>

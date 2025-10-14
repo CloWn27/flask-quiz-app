@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiken - Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+</head>
+<body>
+<div class="main-container">
+    <h1>📊 Solo-Spiel Statistiken</h1>
+    <div class="card">
+        {% if stats %}
+        <ul class="leaderboard">
+            <li class="leaderboard-item" style="font-family: 'Orbitron', monospace;">
+                <span>👤 Spieler</span>
+                <span>🏆 Score</span>
+                <span>🎯 Prozent</span>
+                <span>🗓️ Datum</span>
+            </li>
+            {% for stat in stats %}
+            <li class="leaderboard-item">
+                <span>{{ stat.player_name }}</span>
+                <span style="color: var(--accent-gold);">{{ stat.score }} / {{ stat.total_questions }}</span>
+                <span style="color: {% if stat.percentage >= 80 %}var(--success){% elif stat.percentage >= 50 %}var(--accent-orange){% else %}var(--danger){% endif %};">
+                                {{ "%.1f"|format(stat.percentage) }}%
+                            </span>
+                <span>{{ stat.played_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="text-align: center; color: var(--text-dim);">Noch keine Statistiken vorhanden. Spiele ein Solo-Quiz,
+            um die Liste zu füllen!</p>
+        {% endif %}
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ url_for('player.index') }}" class="btn btn-primary">Zurück zur Startseite</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

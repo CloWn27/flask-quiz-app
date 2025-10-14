@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 COMBAT ZONE {{ current }} | CYBER QUIZ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyberpunk.css') }}">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+</head>
+<body>
+<div class="main-container">
+    <div class="cyber-panel question-container">
+        {% if feedback and feedback.was_correct is not none %}
+        <div class="feedback-banner {% if feedback.was_correct %}correct{% else %}incorrect{% endif %}">
+            {% if feedback.was_correct %}
+            <strong>✅ KORREKT!</strong> Gut gemacht!
+            {% else %}
+            <strong>❌ FALSCH.</strong> Die richtige Antwort war: <strong>{{ feedback.correct_answer }}</strong>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 1rem;">
+            <h2 class="question-number">⚡ CHALLENGE {{ current }}</h2>
+            <div style="color: var(--accent-purple); font-family: 'Orbitron', monospace; font-size: 0.9rem;">
+                🔮 DIFFICULTY: {{ question.difficulty|upper if question.difficulty else 'UNKNOWN' }}
+            </div>
+        </div>
+
+        <div class="question-text">
+            💭 {{ question.question }}
+        </div>
+
+        <form action="{{ url_for('player.quiz') }}" method="post">
+            {% if question.type == 'mc' %}
+            <div class="form-group">
+                <div class="radio-group">
+                    {% for option in question.options %}
+                    <div class="radio-option">
+                        <input type="radio" id="option_{{ loop.index }}" name="answer" value="{{ option }}" required>
+                        <label for="option_{{ loop.index }}">{{ option }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label for="text_answer">⌨️ DEINE ANTWORT:</label>
+                <input type="text" id="text_answer" name="answer" required autofocus>
+            </div>
+            {% endif %}
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="submit" class="cyber-btn btn-success">
+                    🚀 Antwort bestätigen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+    .feedback-banner {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        border: 2px solid;
+    }
+
+    .feedback-banner.correct {
+        background-color: rgba(0, 255, 65, 0.1);
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .feedback-banner.incorrect {
+        background-color: rgba(255, 0, 64, 0.1);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+</style>
+</body>
+</html>

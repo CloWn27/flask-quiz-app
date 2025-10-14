@@ -1,0 +1,63 @@
+# FlaskProject Requirements
+# Core Flask and web framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Database
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+SQLAlchemy>=2.0.44
+
+# Forms and validation
+Flask-WTF==1.2.1
+WTForms==3.1.1
+
+# WebSockets for real-time features
+Flask-SocketIO==5.3.6
+python-socketio==5.11.0
+python-engineio==4.8.0
+
+# CORS support
+Flask-CORS==4.0.0
+
+# Rate limiting
+Flask-Limiter==3.5.0
+limits==3.6.0
+
+# Security
+Flask-Talisman==1.1.0
+cryptography>=45.0.7,<47.0.0
+bcrypt==4.1.2
+
+# Email validation (if needed)
+email-validator==2.1.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Utilities
+bleach==6.1.0
+MarkupSafe==2.1.3
+Jinja2==3.1.2
+
+# Development and testing
+pytest==7.4.3
+pytest-flask==1.3.0
+pytest-cov==4.1.0
+
+# Production server
+gunicorn==21.2.0
+
+# Additional utilities
+requests==2.31.0
+urllib3==2.0.7
+
+# Logging and monitoring (optional)
+colorama==0.4.6
+
+# QR Code generation
+qrcode==7.4.2
+Pillow==10.1.0
+
+# Type hints support
+typing-extensions==4.8.0

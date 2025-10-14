@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiel beitreten - Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+</head>
+<body>
+<div class="main-container">
+    <h1 class="fade-in">🎮 Quiz Spiel beitreten</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash-messages fade-in">
+        {% for message in messages %}
+        <div class="flash-message">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="card slide-up">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
+            <h2>Bereit für das Quiz?</h2>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">
+                Geben Sie die Spiel-PIN und Ihren Namen ein, um beizutreten
+            </p>
+        </div>
+
+        <form action="{{ url_for('player.join_game') }}" method="post" id="join-form">
+            <div class="pin-container">
+                <label for="pin"
+                       style="display: block; text-align: center; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;">🔢
+                    Spiel-PIN eingeben:</label>
+                <input type="text" id="pin" name="pin" class="pin-input" required placeholder="123456" maxlength="6"
+                       pattern="[0-9]{6}">
+            </div>
+
+            <div class="form-group">
+                <label for="player_name">👤 Ihr Spielername:</label>
+                <input type="text" id="player_name" name="player_name" required placeholder="Geben Sie Ihren Namen ein"
+                       maxlength="20">
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" id="join-btn">
+                    🎯 Spiel beitreten
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card slide-up" style="animation-delay: 0.3s;">
+        <h3>🎲 Wie funktioniert's?</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">1️⃣</div>
+                <h4>PIN erhalten</h4>
+                <p>Ihr Spielleiter gibt Ihnen eine 6-stellige PIN</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">2️⃣</div>
+                <h4>Namen wählen</h4>
+                <p>Wählen Sie einen kreativen Spielernamen</p>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">3️⃣</div>
+                <h4>Los spielen!</h4>
+                <p>Warten Sie auf den Start und haben Sie Spaß</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fun Facts -->
+    <div class="card slide-up" style="animation-delay: 0.5s; text-align: center;">
+        <h3>⚡ Wussten Sie schon?</h3>
+        <div id="fun-fact"
+             style="font-size: 1.1rem; color: var(--text-secondary); padding: 1rem; background: var(--secondary-bg); border-radius: 12px; margin-top: 1rem;">
+            <!-- Fun fact will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const funFacts = [
+        "🧠 Quizspiele helfen dabei, das Gedächtnis zu verbessern!",
+        "🏃‍♂️ Schnelle Antworten geben Bonuspunkte!",
+        "🎯 Teamwork macht das Quiz noch spannender!",
+        "🌟 Jedes Quiz ist eine Chance, etwas Neues zu lernen!",
+        "🚀 Die erste Frage entscheidet oft über den weiteren Verlauf!",
+        "🧩 Diverse Fragenkategorien halten das Spiel interessant!",
+        "🎪 Quiz-Spiele sind seit über 100 Jahren beliebt!",
+        "⏱️ Zeitdruck kann die Kreativität fördern!"
+    ];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Show random fun fact
+        const factEl = document.getElementById('fun-fact');
+        const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+        factEl.textContent = randomFact;
+
+        // PIN input formatting
+        const pinInput = document.getElementById('pin');
+        pinInput.addEventListener('input', function (e) {
+            // Remove non-digits
+            let value = e.target.value.replace(/[^0-9]/g, '');
+
+            // Limit to 6 digits
+            if (value.length > 6) {
+                value = value.slice(0, 6);
+            }
+
+            e.target.value = value;
+
+            // Auto-focus name field when PIN is complete
+            if (value.length === 6) {
+                document.getElementById('player_name').focus();
+            }
+        });
+
+        // Form validation
+        document.getElementById('join-form').addEventListener('submit', function (e) {
+            const pin = document.getElementById('pin').value.trim();
+            const playerName = document.getElementById('player_name').value.trim();
+
+            if (pin.length !== 6) {
+                e.preventDefault();
+                alert('⚠️ Die PIN muss genau 6 Ziffern haben!');
+                pinInput.focus();
+                return;
+            }
+
+            if (playerName.length < 2) {
+                e.preventDefault();
+                alert('⚠️ Der Spielername muss mindestens 2 Zeichen haben!');
+                document.getElementById('player_name').focus();
+                return;
+            }
+
+            if (playerName.length > 20) {
+                e.preventDefault();
+                alert('⚠️ Der Spielername darf höchstens 20 Zeichen haben!');
+                document.getElementById('player_name').focus();
+                return;
+            }
+
+            // Add loading state
+            const joinBtn = document.getElementById('join-btn');
+            joinBtn.innerHTML = '🔄 Trete bei...';
+            joinBtn.disabled = true;
+        });
+
+        // Focus PIN input on load
+        pinInput.focus();
+
+        // Add some interactive animations
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.addEventListener('mouseenter', function () {
+                this.style.transform = 'translateY(-5px)';
+            });
+
+            card.addEventListener('mouseleave', function () {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Auto-refresh fun fact every 10 seconds
+        setInterval(() => {
+            const newFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+            if (newFact !== factEl.textContent) {
+                factEl.style.opacity = '0.5';
+                setTimeout(() => {
+                    factEl.textContent = newFact;
+                    factEl.style.opacity = '1';
+                }, 300);
+            }
+        }, 10000);
+    });
+</script>
+</body>
+</html>
