@@ -2,6 +2,7 @@
 
 import logging
 import random
+import time
 import uuid
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
@@ -142,34 +143,68 @@ def game_lobby(pin):
 
 @player_bp.route('/start_quiz', methods=['POST'])
 def start_quiz():
+    from utils.security import validate_player_name
+    
     form = SoloQuizForm()
     if form.validate_on_submit():
-        name = form.player_name.data.strip()
+        # Additional validation and sanitization
+        raw_name = form.player_name.data
+        clean_name = validate_player_name(raw_name)
+        
+        if not clean_name:
+            flash('Ungültiger Name. Bitte verwende nur Buchstaben, Zahlen und Grundzeichen.', 'danger')
+            return redirect(url_for('player.index'))
+        
         mode = form.mode.data
         difficulty = form.difficulty.data
         language = form.language.data
-
-        all_questions = load_questions(language)
-        if not all_questions:
-            flash(f'Keine Fragen für die Sprache "{language}" gefunden!', 'danger')
+        
+        # Validate selected options
+        if mode not in ['difficulty', 'random']:
+            flash('Ungültiger Spielmodus.', 'danger')
+            return redirect(url_for('player.index'))
+            
+        if difficulty not in ['easy', 'medium', 'hard', 'heavy']:
+            flash('Ungültiger Schwierigkeitsgrad.', 'danger')
+            return redirect(url_for('player.index'))
+            
+        if language not in ['de', 'en']:
+            flash('Ungültige Sprache.', 'danger')
             return redirect(url_for('player.index'))
 
-        questions = [q for q in all_questions if
-                     q.get('difficulty') == difficulty] if mode == 'difficulty' else all_questions
+        try:
+            all_questions = load_questions(language)
+            if not all_questions:
+                flash(f'Keine Fragen für die Sprache "{language}" gefunden!', 'danger')
+                return redirect(url_for('player.index'))
 
-        if not questions:
-            flash(f'Keine Fragen für den Schwierigkeitsgrad "{difficulty}" gefunden!', 'warning')
+            questions = [q for q in all_questions if
+                         q.get('difficulty') == difficulty] if mode == 'difficulty' else all_questions
+
+            if not questions:
+                flash(f'Keine Fragen für den Schwierigkeitsgrad "{difficulty}" gefunden!', 'warning')
+                return redirect(url_for('player.index'))
+
+            # Ensure we have enough questions
+            num_questions = min(10, len(questions))
+            final_questions = random.sample(questions, num_questions)
+
+            # Clear and set up new session
+            session.clear()
+            session['player_name'] = clean_name
+            session['questions'] = final_questions
+            session['current'] = 0
+            session['score'] = 0
+            session['quiz_started_at'] = time.time()
+            session.permanent = True  # Enable session timeout
+
+            logger.info(f"Solo quiz started by {clean_name}, {num_questions} questions, language: {language}")
+            return redirect(url_for('player.quiz'))
+            
+        except Exception as e:
+            logger.error(f"Error starting quiz: {e}")
+            flash('Ein Fehler ist aufgetreten beim Starten des Quiz. Bitte versuche es erneut.', 'danger')
             return redirect(url_for('player.index'))
-
-        final_questions = random.sample(questions, min(10, len(questions)))
-
-        session.clear()
-        session['player_name'] = name
-        session['questions'] = final_questions
-        session['current'] = 0
-        session['score'] = 0
-
-        return redirect(url_for('player.quiz'))
 
     # Bei Validierungsfehler zurück zum Index
     for field, errors in form.errors.items():
@@ -185,20 +220,35 @@ def quiz():
         return redirect(url_for('player.index'))
 
     if request.method == 'POST':
-        answer = request.form.get('answer', '').strip()
+        from utils.security import sanitize_answer
+        
+        raw_answer = request.form.get('answer', '')
+        answer = sanitize_answer(raw_answer).strip()
+        
         if not answer:
             flash('Bitte gib eine Antwort ein!', 'warning')
             return redirect(url_for('player.quiz'))
 
-        current_q = session['questions'][session['current']]
-        correct_answer = str(current_q.get('answer', '')).strip().lower()
+        try:
+            current_q = session['questions'][session['current']]
+            correct_answer = str(current_q.get('answer', '')).strip().lower()
 
-        was_correct = answer.lower() == correct_answer
-        if was_correct:
-            session['score'] += 1
+            was_correct = answer.lower() == correct_answer
+            if was_correct:
+                session['score'] += 1
 
-        session['feedback'] = {'was_correct': was_correct, 'correct_answer': current_q.get('answer')}
-        session['current'] += 1
+            session['feedback'] = {
+                'was_correct': was_correct, 
+                'correct_answer': current_q.get('answer'),
+                'user_answer': raw_answer  # Keep original for display
+            }
+            session['current'] += 1
+
+        except (KeyError, IndexError, TypeError) as e:
+            logger.error(f"Error processing quiz answer: {e}")
+            flash('Ein Fehler ist aufgetreten. Quiz wird neu gestartet.', 'danger')
+            session.clear()
+            return redirect(url_for('player.index'))
 
         return redirect(url_for('player.quiz'))
 

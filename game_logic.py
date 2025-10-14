@@ -99,9 +99,12 @@ def add_player_to_game(pin, player_id, player_name):
         db.session.commit()
         
         # Notify all players in the game room about the new player
+        players_list = [{'id': p.id, 'name': p.name} for p in game.players.all()]
         socketio.emit('player_joined', {
             'player_name': player_name,
-            'total_players': game.players.count()
+            'total_players': game.players.count(),
+            'players': players_list,
+            'player_count': game.players.count()
         }, room=pin)
         
         logger.info(f"Player '{player_name}' joined game {pin}")

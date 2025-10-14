@@ -20,6 +20,7 @@ from views.host_routes import host_bp
 from views.player_routes import player_bp
 
 # Import SocketIO event handlers
+import socketio_events  # This registers all SocketIO event handlers
 
 # Configure logging
 logging.basicConfig(
