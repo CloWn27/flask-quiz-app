@@ -1,4 +1,7 @@
-# FlaskProject/views/api_routes.py - Refactored
+# FlaskProject/views/api_routes.py - API Routes
+
+# Dynamic network info endpoint
+from services.network_monitor import get_dynamic_ip, get_dynamic_network_info, get_dynamic_urls
 
 import logging
 
@@ -30,6 +33,54 @@ def network_info():
         logger.error(f"Critical error in network detection: {e}")
         fallback_info = {'local_ip': '127.0.0.1', 'error': 'Network detection failed'}
         return jsonify(fallback_info), 500
+
+
+@api_bp.route('/api/dynamic-network-info')
+def dynamic_network_info():
+    """API endpoint for current dynamic network information."""
+    try:
+        from flask import current_app
+        
+        # Try to get dynamic network info first
+        dynamic_info = get_dynamic_network_info()
+        current_ip = get_dynamic_ip()
+        
+        if current_ip:
+            # Get URLs with current dynamic IP
+            port = current_app.config.get('FLASK_PORT', 5000)
+            urls = get_dynamic_urls(port)
+            
+            response = {
+                'local_ip': current_ip,
+                'status': 'success',
+                'dynamic': True,
+                'network_info': dynamic_info,
+                'urls': urls,
+                'monitoring_enabled': current_app.config.get('DYNAMIC_IP_ENABLED', False)
+            }
+        else:
+            # Fallback to static detection
+            static_info = get_network_info()
+            response = {
+                'local_ip': static_info.get('local_ip', '127.0.0.1'),
+                'status': static_info.get('status', 'fallback'),
+                'dynamic': False,
+                'network_info': static_info,
+                'monitoring_enabled': False,
+                'note': 'Dynamic IP monitoring not active'
+            }
+            
+        logger.debug(f"Dynamic network info requested: {response}")
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Error getting dynamic network info: {e}")
+        return jsonify({
+            'local_ip': '127.0.0.1',
+            'status': 'error',
+            'dynamic': False,
+            'error': str(e)
+        }), 500
 
 
 def _validate_host_session(pin: str) -> bool:

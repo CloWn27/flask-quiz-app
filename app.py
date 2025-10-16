@@ -19,8 +19,8 @@ from views.api_routes import api_bp
 from views.host_routes import host_bp
 from views.player_routes import player_bp
 
-# Import SocketIO event handlers
-import socketio_events  # This registers all SocketIO event handlers
+# Import SocketIO event handlers (initialize handlers)
+import socketio_events
 
 # Configure logging
 logging.basicConfig(
@@ -83,27 +83,45 @@ def create_socketio_app(app):
     """Create SocketIO application."""
     return socketio
 
-def display_startup_info(config):
+def display_startup_info(config, network_manager=None):
     """Display network information and startup details."""
     from utils.network import get_network_info, get_network_urls
     import platform
     
     print("\n" + "="*60)
-    print("🧠 QUIZ APP - NETWORK READY")
+    print("🧠 QUIZ APP - NETWORK READY (Dynamic IP Enabled)")
     print("="*60)
     
-    # Network information
-    network_info = get_network_info()
-    if network_info['status'] == 'success':
-        local_ip = network_info['local_ip']
+    # Network information - use dynamic manager if available
+    if network_manager and config.DYNAMIC_IP_ENABLED:
+        network_info = network_manager.get_network_info()
+        local_ip = network_manager.get_current_ip()
+    else:
+        network_info = get_network_info(prefer_method=getattr(config, 'DYNAMIC_IP_PREFERRED_METHOD', 'auto'))
+        local_ip = network_info.get('local_ip')
+    
+    if network_info.get('status') == 'success' and local_ip:
         print(f"🌐 Network Configuration:")
         print(f"   • Local IP: {local_ip}")
+        if 'method' in network_info:
+            print(f"   • Detection method: {network_info['method']}")
         print(f"   • Hostname: {platform.node()}")
         print(f"   • Platform: {platform.system()}")
         print(f"   • Binding to: {config.FLASK_HOST}:{config.FLASK_PORT}")
         
+        # Dynamic IP info
+        if config.DYNAMIC_IP_ENABLED:
+            print(f"   • Dynamic IP monitoring: Enabled (check every {config.DYNAMIC_IP_CHECK_INTERVAL}s)")
+            print(f"   • IP change notifications: {'Enabled' if config.DYNAMIC_IP_NOTIFY_CLIENTS else 'Disabled'}")
+        else:
+            print(f"   • Dynamic IP monitoring: Disabled")
+        
         # URLs for different purposes
-        urls = get_network_urls(host=local_ip, port=config.FLASK_PORT)
+        if network_manager:
+            urls = network_manager.get_network_urls(port=config.FLASK_PORT)
+        else:
+            urls = get_network_urls(host=local_ip, port=config.FLASK_PORT)
+            
         print(f"\n👥 For classmates/other devices:")
         print(f"   • Main page: {urls['local_url']}")
         print(f"   • Join game: {urls['join_url']}")
@@ -114,9 +132,13 @@ def display_startup_info(config):
         print(f"   • All devices must be on the same network")
         print(f"   • QR codes available in host dashboard")
         print(f"   • Firewall may need to allow port {config.FLASK_PORT}")
+        if config.DYNAMIC_IP_ENABLED:
+            print(f"   • App will automatically adjust if IP changes")
     else:
         print(f"⚠️  Network detection failed, using localhost only")
         print(f"   • Local access: http://127.0.0.1:{config.FLASK_PORT}")
+        if 'error' in network_info:
+            print(f"   • Error: {network_info['error']}")
     
     print(f"\n🔒 Security: Minimal (development mode)")
     print(f"🌐 CORS: Allowing all origins for easy access")
@@ -127,21 +149,61 @@ if __name__ == '__main__':
     app = create_app()
     config = get_config()
     
+    # Initialize dynamic IP monitoring if enabled
+    network_manager = None
+    if config.DYNAMIC_IP_ENABLED:
+        from services.network_monitor import network_manager as nm
+        network_manager = nm
+        network_manager.init_app(app)
+        
+        # Configure monitoring settings from config
+        network_manager.monitor.check_interval = config.DYNAMIC_IP_CHECK_INTERVAL
+        
+        # Start monitoring
+        print("🔍 Initializing dynamic IP monitoring...")
+        initial_check = network_manager.start_monitoring()
+        
+        if initial_check.get('new_ip'):
+            print(f"✅ Dynamic IP detected: {initial_check['new_ip']}")
+        else:
+            print(f"⚠️ Dynamic IP detection had issues, falling back to static detection")
+    
     # Display startup information
-    display_startup_info(config)
+    display_startup_info(config, network_manager)
+    
+    # Setup graceful shutdown for network monitoring
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        print("\n🚫 Shutting down...")
+        if network_manager:
+            print("🗜️ Stopping network monitoring...")
+            network_manager.stop_monitoring()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # Run development server
-    if config.SSL_ENABLED and os.path.exists(config.SSL_CERT_PATH) and os.path.exists(config.SSL_KEY_PATH):
-        context = (config.SSL_CERT_PATH, config.SSL_KEY_PATH)
-        print("🔒 Starting with SSL/HTTPS...")
-        socketio.run(app, 
-                    host=config.FLASK_HOST, 
-                    port=config.FLASK_PORT, 
-                    debug=config.FLASK_DEBUG,
-                    ssl_context=context)
-    else:
-        print("🚀 Starting HTTP server...")
-        socketio.run(app, 
-                    host=config.FLASK_HOST, 
-                    port=config.FLASK_PORT, 
-                    debug=config.FLASK_DEBUG)
+    try:
+        if config.SSL_ENABLED and os.path.exists(config.SSL_CERT_PATH) and os.path.exists(config.SSL_KEY_PATH):
+            context = (config.SSL_CERT_PATH, config.SSL_KEY_PATH)
+            print("🔒 Starting with SSL/HTTPS...")
+            socketio.run(app, 
+                        host=config.FLASK_HOST, 
+                        port=config.FLASK_PORT, 
+                        debug=config.FLASK_DEBUG,
+                        ssl_context=context)
+        else:
+            print("🚀 Starting HTTP server...")
+            socketio.run(app, 
+                        host=config.FLASK_HOST, 
+                        port=config.FLASK_PORT, 
+                        debug=config.FLASK_DEBUG)
+    except KeyboardInterrupt:
+        print("\n🚫 Server interrupted by user")
+    finally:
+        if network_manager:
+            print("🗜️ Cleaning up network monitoring...")
+            network_manager.stop_monitoring()

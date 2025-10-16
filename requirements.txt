@@ -1,7 +1,7 @@
 # FlaskProject Requirements
 # Core Flask and web framework
 Flask==3.0.0
-Werkzeug==3.0.1
+Werkzeug==3.0.6
 
 # Database
 Flask-SQLAlchemy==3.1.1
@@ -18,7 +18,7 @@ python-socketio==5.11.0
 python-engineio==4.8.0
 
 # CORS support
-Flask-CORS==4.0.0
+Flask-CORS==6.0.0
 
 # Rate limiting
 Flask-Limiter==3.5.0
@@ -38,7 +38,7 @@ python-dotenv==1.0.0
 # Utilities
 bleach==6.1.0
 MarkupSafe==2.1.3
-Jinja2==3.1.2
+Jinja2==3.1.6
 
 # Development and testing
 pytest==7.4.3
@@ -46,11 +46,11 @@ pytest-flask==1.3.0
 pytest-cov==4.1.0
 
 # Production server
-gunicorn==21.2.0
+gunicorn==23.0.0
 
 # Additional utilities
-requests==2.31.0
-urllib3==2.0.7
+requests==2.32.4
+urllib3==2.5.0
 
 # Logging and monitoring (optional)
 colorama==0.4.6

@@ -69,6 +69,12 @@ class Config:
     FLASK_PORT = int(os.environ.get('FLASK_PORT', 5000))
     FLASK_DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
+    # Dynamic IP settings
+    DYNAMIC_IP_ENABLED = os.environ.get('DYNAMIC_IP_ENABLED', 'True').lower() == 'true'
+    DYNAMIC_IP_CHECK_INTERVAL = int(os.environ.get('DYNAMIC_IP_CHECK_INTERVAL', 30))  # seconds
+    DYNAMIC_IP_PREFERRED_METHOD = os.environ.get('DYNAMIC_IP_PREFERRED_METHOD', 'auto')  # auto, remote, hostname, system
+    DYNAMIC_IP_NOTIFY_CLIENTS = os.environ.get('DYNAMIC_IP_NOTIFY_CLIENTS', 'True').lower() == 'true'
+    
     # SSL settings
     SSL_ENABLED = os.environ.get('SSL_ENABLED', 'False').lower() == 'true'
     SSL_CERT_PATH = os.environ.get('SSL_CERT_PATH', 'certs/cert.pem')

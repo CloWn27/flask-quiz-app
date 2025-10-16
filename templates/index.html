@@ -11,15 +11,18 @@
 <body>
 <div class="main-container">
     <h1 class="fade-in">🎯 Interactive Quiz Game</h1>
-    <p style="text-align: center; font-size: 1.2rem; color: white; margin-bottom: 3rem; font-weight: 500;">
-        Lernen, spielen und Spaß haben - im Cyber-Style!
+    <p class="subtitle fade-in" style="text-align: center; font-size: 1.2rem; color: var(--text-dim); margin-bottom: 3rem; font-weight: 500; animation-delay: 0.2s;">
+        Lernen, spielen und Spaß haben - im modernen Style!
     </p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="flash-messages fade-in">
         {% for category, message in messages %}
-        <div class="flash-message {{ category }}">{{ message }}</div>
+        <div class="flash-message {{ category }}" role="alert" aria-live="polite">
+            {% if category == 'error' %}⚠️{% elif category == 'success' %}✅{% elif category == 'warning' %}⚡{% else %}💡{% endif %} 
+            {{ message }}
+        </div>
         {% endfor %}
     </div>
     {% endif %}
@@ -45,10 +48,10 @@
             <a href="{{ url_for('host.host_dashboard') }}" class="btn btn-success">Quiz hosten</a>
         </div>
         <div class="dashboard-card">
-            <div class="dashboard-icon">💡</div>
-            <h3>Über das Quiz</h3>
-            <p>Ein interaktives Lernspiel mit verschiedenen Schwierigkeitsstufen.</p>
-            <a href="#" onclick="alert('Wissenswertes über das Quiz-Spiel!')" class="btn btn-danger">Info</a>
+            <div class="dashboard-icon">📊</div>
+            <h3>Statistiken</h3>
+            <p>Verfolgen Sie Ihren Fortschritt und sehen Sie Ihre Erfolge.</p>
+            <a href="{{ url_for('player.stats') }}" class="btn btn-danger">Statistiken</a>
         </div>
     </div>
 
@@ -56,8 +59,11 @@
         <h2>🎮 Solo-Quiz starten</h2>
         <form action="{{ url_for('player.start_quiz') }}" method="post" class="loading-form">
             <div class="form-group">
-                <label class="form-label" for="player_name">Dein Name</label>
-                <input type="text" id="player_name" name="player_name" class="form-control" placeholder="Gib deinen Namen ein" required>
+                <label class="form-label" for="player_name">👤 Dein Name</label>
+                <input type="text" id="player_name" name="player_name" class="form-control" 
+                       placeholder="Gib deinen Namen ein" required maxlength="20" 
+                       autocomplete="username" aria-describedby="name-help">
+                <small id="name-help" style="color: var(--text-dim); font-size: 0.9rem;">2-20 Zeichen</small>
             </div>
             <div class="form-group">
                 <label class="form-label">Spielmodus</label>
@@ -73,13 +79,14 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="difficulty">Schwierigkeitsgrad</label>
-                <select id="difficulty" name="difficulty" class="form-control">
-                    <option value="easy">🟢 Einfach</option>
-                    <option value="medium">🟡 Mittel</option>
-                    <option value="hard">🟠 Schwer</option>
-                    <option value="heavy">🔴 Sehr Schwer</option>
+                <label class="form-label" for="difficulty">⭐ Schwierigkeitsgrad</label>
+                <select id="difficulty" name="difficulty" class="form-control" aria-describedby="difficulty-help">
+                    <option value="easy">🟢 Einfach (Grundwissen)</option>
+                    <option value="medium" selected>🟡 Mittel (Allgemeinwissen)</option>
+                    <option value="hard">🟠 Schwer (Expertenwissen)</option>
+                    <option value="heavy">🔴 Sehr Schwer (Spezialistenwissen)</option>
                 </select>
+                <small id="difficulty-help" style="color: var(--text-dim); font-size: 0.9rem;">Wählen Sie Ihr bevorzugtes Niveau</small>
             </div>
             <div class="form-group">
                 <label class="form-label" for="language">Sprache</label>

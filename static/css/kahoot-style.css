@@ -1,5 +1,5 @@
 /* FlaskProject/static/css/kahoot-style.css */
-/* Inspiriert von Kahoot mit einem modernen, cyber-angehauchten Twist */
+/* Modern Kahoot-inspired theme with accessibility improvements */
 
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
 
@@ -16,6 +16,11 @@
     --success: #00ff41;
     --border-color: rgba(0, 255, 255, 0.2);
     --shadow: rgba(0, 255, 255, 0.1);
+    
+    /* Animation variables */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
 }
 
 * {
@@ -67,12 +72,33 @@ h1 {
     border: 2px solid var(--accent-cyan);
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     text-decoration: none;
     display: inline-block;
     text-align: center;
     background: transparent;
     color: var(--accent-cyan);
+    position: relative;
+    overflow: hidden;
+    min-height: 54px;
+    
+    /* Accessibility improvements */
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+/* Button focus states for accessibility */
+.btn:focus {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Button loading state */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .btn:hover {
@@ -195,9 +221,62 @@ input:focus, select:focus, textarea:focus {
     margin-bottom: 1rem;
 }
 
+.flash-messages {
+    margin-bottom: 2rem;
+}
+
 .flash-message {
     background: rgba(255, 0, 64, 0.2);
     border: 1px solid var(--danger);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-bright);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.flash-message.success {
+    background: rgba(0, 255, 65, 0.2);
+    border-color: var(--success);
+}
+
+.flash-message.warning {
+    background: rgba(255, 170, 0, 0.2);
+    border-color: var(--accent-orange);
+}
+
+.flash-message.info {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: var(--accent-cyan);
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
     color: var(--text-bright);
     padding: 1rem;
     border-radius: 12px;

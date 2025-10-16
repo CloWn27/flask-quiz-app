@@ -22,8 +22,7 @@ config = get_config()
 player_bp = Blueprint('player', __name__)
 
 
-# ... (Rest der Datei ist unverändert)
-# --- Formulare (Flask-WTF für Sicherheit und Validierung) ---
+# --- Forms (Flask-WTF for security and validation) ---
 
 class JoinGameForm(FlaskForm):
     pin = StringField('Spiel-PIN', validators=[
@@ -143,7 +142,6 @@ def game_lobby(pin):
 
 @player_bp.route('/start_quiz', methods=['POST'])
 def start_quiz():
-    from utils.security import validate_player_name
     
     form = SoloQuizForm()
     if form.validate_on_submit():
