@@ -19,7 +19,7 @@ from views.api_routes import api_bp
 from views.host_routes import host_bp
 from views.player_routes import player_bp
 
-# Import SocketIO event handlers (initialize handlers)
+# Import SocketIO event handlers
 import socketio_events
 
 # Configure logging
@@ -70,18 +70,19 @@ def create_app(config_name=None):
     app.register_blueprint(host_bp)
     app.register_blueprint(api_bp)
     
-    # Create database tables
+    # Create database tables and initialize data
     with app.app_context():
         db.create_all()
+        
+        # Initialize default achievements
+        from game_logic import initialize_default_achievements
+        initialize_default_achievements()
     
     # Configure session
     app.permanent_session_lifetime = timedelta(seconds=config.PERMANENT_SESSION_LIFETIME)
     
     return app
 
-def create_socketio_app(app):
-    """Create SocketIO application."""
-    return socketio
 
 def display_startup_info(config, network_manager=None):
     """Display network information and startup details."""

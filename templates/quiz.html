@@ -3,28 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 COMBAT ZONE {{ current }} | CYBER QUIZ</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyberpunk.css') }}">
+    <title>🎯 Frage {{ number }} | Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
     <link rel="icon"
           href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
 </head>
 <body>
 <div class="main-container">
-    <div class="cyber-panel question-container">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle dark" id="themeToggle" onclick="toggleTheme()">
+        <span class="theme-icon sun-icon">☀️</span>
+        <span class="theme-icon moon-icon">🌙</span>
+    </div>
+
+    <div class="question-container">
         {% if feedback and feedback.was_correct is not none %}
         <div class="feedback-banner {% if feedback.was_correct %}correct{% else %}incorrect{% endif %}">
             {% if feedback.was_correct %}
-            <strong>✅ KORREKT!</strong> Gut gemacht!
+            <strong>✅ KORREKT!</strong> Gut gemacht! 
+            {% if feedback.streak and feedback.streak > 1 %}
+                <span class="streak-badge">🔥 {{ feedback.streak }} in Folge!</span>
+            {% endif %}
             {% else %}
             <strong>❌ FALSCH.</strong> Die richtige Antwort war: <strong>{{ feedback.correct_answer }}</strong>
             {% endif %}
         </div>
         {% endif %}
 
+        <!-- Timer Section -->
+        <div class="timer-container" id="timerContainer">
+            <div class="timer-circle" id="timerCircle">
+                <div class="timer-inner">
+                    <div class="timer-text" id="timerText">30</div>
+                    <div class="timer-label">Sekunden</div>
+                </div>
+            </div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 1rem;">
-            <h2 class="question-number">⚡ CHALLENGE {{ current }}</h2>
+            <h2 class="question-number">⚡ CHALLENGE {{ number }}</h2>
             <div style="color: var(--accent-purple); font-family: 'Orbitron', monospace; font-size: 0.9rem;">
-                🔮 DIFFICULTY: {{ question.difficulty|upper if question.difficulty else 'UNKNOWN' }}
+                🔮 {{ question.difficulty|upper if question.difficulty else 'MEDIUM' }}
+                {% if question.points %} | 💎 {{ question.points }} Punkte{% endif %}
             </div>
         </div>
 
@@ -52,7 +72,7 @@
             {% endif %}
 
             <div style="text-align: center; margin-top: 2rem;">
-                <button type="submit" class="cyber-btn btn-success">
+                <button type="submit" class="btn btn-success submit-btn">
                     🚀 Antwort bestätigen
                 </button>
             </div>
@@ -81,5 +101,146 @@
         color: var(--danger);
     }
 </style>
+
+<script>
+    // Timer functionality
+    let timeLeft = {{ question.timer_seconds or 30 }};
+    let timerInterval;
+    let startTime = Date.now();
+    
+    function updateTimer() {
+        const timerText = document.getElementById('timerText');
+        const timerCircle = document.getElementById('timerCircle');
+        
+        if (timeLeft <= 0) {
+            // Time's up - auto-submit form
+            clearInterval(timerInterval);
+            timerText.textContent = '0';
+            timerCircle.classList.add('timer-warning');
+            
+            // Auto-submit the form
+            setTimeout(() => {
+                const form = document.querySelector('form');
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'timeout';
+                hiddenInput.value = 'true';
+                form.appendChild(hiddenInput);
+                form.submit();
+            }, 1000);
+            
+            return;
+        }
+        
+        timerText.textContent = timeLeft;
+        
+        // Change timer appearance when time is low
+        if (timeLeft <= 10) {
+            timerCircle.classList.add('timer-warning');
+        }
+        
+        timeLeft--;
+    }
+    
+    // Theme toggle functionality
+    function toggleTheme() {
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.setAttribute('data-theme', newTheme);
+        themeToggle.className = `theme-toggle ${newTheme}`;
+        localStorage.setItem('theme', newTheme);
+    }
+    
+    // Initialize theme
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        
+        body.setAttribute('data-theme', savedTheme);
+        themeToggle.className = `theme-toggle ${savedTheme}`;
+    }
+    
+    function getResponseTime() {
+        return Math.round((Date.now() - startTime) / 1000);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize theme
+        initTheme();
+        
+        // Start timer
+        timerInterval = setInterval(updateTimer, 1000);
+        updateTimer(); // Initial call
+        
+        // Auto-focus text input
+        const textInput = document.getElementById('text_answer');
+        if (textInput) {
+            textInput.focus();
+        }
+        
+        // Add response time tracking to form
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            // Add response time to form
+            const responseTimeInput = document.createElement('input');
+            responseTimeInput.type = 'hidden';
+            responseTimeInput.name = 'response_time';
+            responseTimeInput.value = getResponseTime();
+            this.appendChild(responseTimeInput);
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            const submitBtn = this.querySelector('.submit-btn');
+            if (submitBtn) {
+                submitBtn.innerHTML = '🔄 Wird gesendet...';
+                submitBtn.disabled = true;
+            }
+        });
+        
+        // Add keyboard shortcut (Enter) for radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach((radio, index) => {
+            radio.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    form.submit();
+                }
+            });
+        });
+        
+        // Add number key shortcuts for radio buttons (1-4)
+        document.addEventListener('keydown', function(event) {
+            if (event.target.tagName === 'INPUT' && event.target.type === 'text') {
+                return; // Don't interfere with text input
+            }
+            
+            const num = parseInt(event.key);
+            if (num >= 1 && num <= 4) {
+                const radio = document.querySelector(`input[type="radio"]:nth-of-type(${num})`);
+                if (radio) {
+                    radio.checked = true;
+                    radio.focus();
+                }
+            }
+        });
+        
+        // Animate feedback banner if present
+        const feedback = document.querySelector('.feedback-banner');
+        if (feedback) {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                feedback.style.transition = 'all 0.5s ease';
+                feedback.style.opacity = '1';
+                feedback.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    });
+</script>
+
 </body>
 </html>

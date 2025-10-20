@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from extensions import db, socketio
-from database import Game, Player
+from database import Game, Player, User, Achievement, UserAchievement
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ def submit_answer(pin, player_id, answer, response_time):
         return False
 
 def calculate_scores_for_question(pin):
-    """Calculate scores for the current question."""
+    """Enhanced score calculation with timer and achievement support."""
     try:
         game = Game.query.get(pin)
         if not game:
@@ -192,6 +192,8 @@ def calculate_scores_for_question(pin):
         
         current_question = game.questions[game.current_question]
         correct_answer = str(current_question['answer']).strip().lower()
+        question_timer = current_question.get('timer_seconds', 30)
+        base_points = current_question.get('points', 100)
         
         for player in game.players:
             answers = player.answers or []
@@ -199,12 +201,29 @@ def calculate_scores_for_question(pin):
                 answer_data = answers[game.current_question]
                 if answer_data and answer_data['answer']:
                     player_answer = str(answer_data['answer']).strip().lower()
+                    response_time = answer_data.get('response_time', question_timer)
+                    
                     if player_answer == correct_answer:
-                        # Award points based on response time (max 1000 points)
-                        response_time = answer_data.get('response_time', 30)
-                        base_points = 500
-                        time_bonus = max(0, 500 - (response_time * 10))
-                        player.score += int(base_points + time_bonus)
+                        # Enhanced scoring system
+                        time_percentage = max(0, (question_timer - response_time) / question_timer)
+                        time_bonus = int(base_points * 0.5 * time_percentage)  # Up to 50% bonus for speed
+                        difficulty_multiplier = {
+                            'easy': 1.0, 'medium': 1.2, 'hard': 1.5, 'heavy': 2.0
+                        }.get(current_question.get('difficulty', 'medium'), 1.0)
+                        
+                        final_score = int((base_points + time_bonus) * difficulty_multiplier)
+                        player.score += final_score
+                        
+                        # Track streak for achievements
+                        if not hasattr(player, 'current_streak'):
+                            player.current_streak = 0
+                        player.current_streak += 1
+                        
+                        logger.info(f"Player {player.name} scored {final_score} points (base: {base_points}, time bonus: {time_bonus}, multiplier: {difficulty_multiplier})")
+                    else:
+                        # Reset streak on wrong answer
+                        if hasattr(player, 'current_streak'):
+                            player.current_streak = 0
         
         db.session.commit()
         logger.info(f"Calculated scores for question {game.current_question + 1} in game {pin}")
@@ -251,11 +270,133 @@ def get_leaderboard(pin):
         logger.error(f"Error getting leaderboard for game {pin}: {e}")
         return []
 
+def process_achievements(user_id, game_stats=None):
+    """Process and unlock achievements for a user."""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return []
+        
+        unlocked_achievements = []
+        achievements = Achievement.query.filter_by(is_active=True).all()
+        
+        for achievement in achievements:
+            # Check if user already has this achievement
+            existing = UserAchievement.query.filter_by(
+                user_id=user_id, achievement_id=achievement.id
+            ).first()
+            
+            if existing:
+                continue
+                
+            # Check achievement requirements
+            requirement_met = False
+            current_value = 0
+            
+            if achievement.requirement_type == 'total_score':
+                current_value = user.total_score
+            elif achievement.requirement_type == 'games_played':
+                current_value = user.games_played
+            elif achievement.requirement_type == 'streak':
+                current_value = user.best_streak
+            elif achievement.requirement_type == 'accuracy':
+                if user.questions_answered > 0:
+                    current_value = int((user.correct_answers / user.questions_answered) * 100)
+            
+            if current_value >= achievement.requirement_value:
+                # Unlock achievement
+                user_achievement = UserAchievement(
+                    user_id=user_id,
+                    achievement_id=achievement.id,
+                    progress=current_value
+                )
+                db.session.add(user_achievement)
+                unlocked_achievements.append(achievement)
+                
+                logger.info(f"Achievement '{achievement.name}' unlocked for user {user.username}")
+        
+        db.session.commit()
+        return unlocked_achievements
+        
+    except Exception as e:
+        logger.error(f"Error processing achievements for user {user_id}: {e}")
+        db.session.rollback()
+        return []
+
+def initialize_default_achievements():
+    """Create default achievements if they don't exist."""
+    try:
+        if Achievement.query.count() > 0:
+            return  # Already initialized
+            
+        default_achievements = [
+            {
+                'name': 'First Steps', 'description': 'Complete your first quiz',
+                'icon': '🎯', 'category': 'games', 'requirement_type': 'games_played',
+                'requirement_value': 1, 'points': 10, 'rarity': 'common'
+            },
+            {
+                'name': 'Century Club', 'description': 'Score 100 points in a single game',
+                'icon': '💯', 'category': 'score', 'requirement_type': 'total_score',
+                'requirement_value': 100, 'points': 20, 'rarity': 'common'
+            },
+            {
+                'name': 'Speed Demon', 'description': 'Answer 5 questions correctly in under 5 seconds each',
+                'icon': '⚡', 'category': 'speed', 'requirement_type': 'streak',
+                'requirement_value': 5, 'points': 30, 'rarity': 'rare'
+            },
+            {
+                'name': 'Perfect Score', 'description': 'Get 100% accuracy in a 10+ question quiz',
+                'icon': '🏆', 'category': 'accuracy', 'requirement_type': 'accuracy',
+                'requirement_value': 100, 'points': 50, 'rarity': 'epic'
+            },
+            {
+                'name': 'Quiz Master', 'description': 'Play 50 games',
+                'icon': '👑', 'category': 'games', 'requirement_type': 'games_played',
+                'requirement_value': 50, 'points': 100, 'rarity': 'legendary'
+            }
+        ]
+        
+        for ach_data in default_achievements:
+            achievement = Achievement(**ach_data)
+            db.session.add(achievement)
+        
+        db.session.commit()
+        logger.info(f"Initialized {len(default_achievements)} default achievements")
+        
+    except Exception as e:
+        logger.error(f"Error initializing achievements: {e}")
+        db.session.rollback()
+
+def get_user_or_create_guest(player_name):
+    """Get existing user or create guest user."""
+    try:
+        # Try to find existing guest user by name
+        user = User.query.filter_by(username=player_name, is_guest=True).first()
+        
+        if not user:
+            # Create new guest user
+            user = User(
+                username=player_name,
+                display_name=player_name,
+                is_guest=True
+            )
+            db.session.add(user)
+            db.session.commit()
+            logger.info(f"Created guest user: {player_name}")
+        
+        return user
+        
+    except Exception as e:
+        logger.error(f"Error creating/retrieving user {player_name}: {e}")
+        db.session.rollback()
+        return None
+
 def cleanup_old_games():
     """Clean up games older than 24 hours."""
     try:
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(days=1)
+        from datetime import datetime, timedelta, timezone
+        cutoff = datetime.now(timezone.utc) - timedelta(days=1)
         
         old_games = Game.query.filter(Game.created_at < cutoff).all()
         for game in old_games:

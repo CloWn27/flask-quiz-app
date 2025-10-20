@@ -8,7 +8,7 @@
         {% if percentage >= 80 %}🏆 VICTORY ACHIEVED{% elif percentage >= 60 %}⚔️ MISSION COMPLETE{% else %}⚠️ TACTICAL
         RETREAT{% endif %} | CYBER QUIZ
     </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyberpunk.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
     <link rel="icon"
           href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>{% if percentage >= 80 %}🏆{% elif percentage >= 60 %}⚔️{% else %}⚠️{% endif %}</text></svg>">
 </head>
@@ -17,7 +17,7 @@
     {% set percentage = (score/total*100)|round(1) %}
 
     <!-- Epic Results Header -->
-    <div class="cyber-panel" style="margin-bottom: 2rem; text-align: center;">
+    <div class="card" style="margin-bottom: 2rem; text-align: center;">
         {% if percentage >= 80 %}
         <h1 class="result-title"
             style="color: var(--accent-gold); animation: victoryPulse 2s ease-in-out infinite alternate;">
@@ -44,7 +44,7 @@
     </div>
 
     <!-- Score Display Panel -->
-    <div class="cyber-panel result-container">
+    <div class="card">
         <div style="border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 1.5rem; margin-bottom: 2rem;">
             <h2 style="color: var(--accent-gold); font-family: 'Orbitron', monospace; font-size: 1.5rem; margin-bottom: 1rem;">
                 📊 COMBAT STATISTICS
@@ -72,43 +72,79 @@
             {% endif %}
         </div>
 
+        <!-- Performance Metrics -->
+        {% if performance_data %}
+        <div style="margin: 1.5rem 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: rgba(0, 255, 255, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--accent-cyan);">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-cyan);">
+                    {{ "%.0f"|format(performance_data.accuracy) }}%
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-dim);">Genauigkeit</div>
+            </div>
+            <div style="background: rgba(255, 215, 0, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--accent-gold);">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-gold);">
+                    {{ performance_data.overall_grade }}
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-dim);">Gesamtnote</div>
+            </div>
+            {% if total_points %}
+            <div style="background: rgba(157, 78, 221, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--accent-purple);">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-purple);">
+                    {{ total_points }}
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-dim);">Gesamtpunkte</div>
+            </div>
+            {% endif %}
+            {% if best_streak > 1 %}
+            <div style="background: rgba(255, 107, 53, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--accent-orange);">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-orange);">
+                    🔥 {{ best_streak }}
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-dim);">Beste Serie</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Achievement Badges -->
-        <div style="margin: 2rem 0; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(0, 255, 255, 0.2);">
-            <h3 style="color: var(--accent-purple); font-family: 'Orbitron', monospace; margin-bottom: 1rem; font-size: 1rem;">
-                🏅 ACHIEVEMENTS UNLOCKED
-            </h3>
+        {% if unlocked_achievements %}
+        <div class="achievement-unlock">
+            <h3 style="margin-bottom: 1rem;">🏆 Neue Achievements freigeschaltet!</h3>
             <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                {% if score > 0 %}
-                <span class="achievement-badge">🎆 First Blood</span>
-                {% endif %}
-                {% if percentage >= 50 %}
-                <span class="achievement-badge">🛡️ Survivor</span>
-                {% endif %}
-                {% if percentage >= 80 %}
-                <span class="achievement-badge">⚔️ Elite Agent</span>
-                {% endif %}
-                {% if score == total %}
-                <span class="achievement-badge">🏆 Perfect Score</span>
-                {% endif %}
-                {% if total >= 10 %}
-                <span class="achievement-badge">🎯 Endurance</span>
-                {% endif %}
+                {% for achievement in unlocked_achievements %}
+                <div style="background: rgba(255, 215, 0, 0.2); padding: 0.5rem 1rem; border-radius: 12px; border: 2px solid var(--accent-gold);">
+                    <div style="font-size: 1.2rem;">{{ achievement.icon }}</div>
+                    <div style="font-size: 0.9rem; font-weight: bold;">{{ achievement.name }}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">+{{ achievement.points }} Punkte</div>
+                </div>
+                {% endfor %}
             </div>
         </div>
+        {% else %}
+        <div style="margin: 2rem 0; padding: 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; border: 1px solid rgba(0, 255, 255, 0.2); text-align: center;">
+            <h3 style="color: var(--accent-purple); font-family: 'Orbitron', monospace; margin-bottom: 1rem; font-size: 1rem;">
+                🏅 Spiele weiter für mehr Achievements!
+            </h3>
+            <p style="color: var(--text-dim); margin-bottom: 1rem;">Sammle Erfolge und schalte besondere Belohnungen frei.</p>
+            <a href="{{ url_for('player.achievements') }}" class="btn btn-warning" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                🏆 Alle Achievements anzeigen
+            </a>
+        </div>
+        {% endif %}
 
         <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
-            <a href="/" class="cyber-btn btn-primary">
-                🚀 NEW MISSION
+            <a href="/" class="btn btn-primary">
+                🚀 Neues Quiz
             </a>
-            <button onclick="shareResults()" class="cyber-btn btn-warning">
+            <button onclick="shareResults()" class="btn btn-warning">
                 📱 SHARE VICTORY
             </button>
         </div>
     </div>
 
     <!-- Stats Panel -->
-    <div class="cyber-panel" style="margin-top: 2rem; padding: 1rem;">
+    <div class="card" style="margin-top: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; font-family: 'Orbitron', monospace; font-size: 0.9rem;">
             <div style="color: var(--accent-cyan);">
                 📊 EFFICIENCY: {% if total > 0 %}{{ ((score/total)*100)|round(0) }}%{% else %}N/A{% endif %}

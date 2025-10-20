@@ -55,14 +55,9 @@ class Config:
     # CORS - Allow all origins for easy device access (minimal security)
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
     
-    # File upload limits
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 16777216))  # 16MB
-    MAX_FORM_MEMORY_SIZE = int(os.environ.get('MAX_FORM_MEMORY_SIZE', 2097152))  # 2MB
-    
     # Application limits
     MAX_PLAYERS_PER_GAME = int(os.environ.get('MAX_PLAYERS_PER_GAME', 50))
     MAX_QUESTIONS_PER_QUIZ = int(os.environ.get('MAX_QUESTIONS_PER_QUIZ', 100))
-    PIN_EXPIRY_MINUTES = int(os.environ.get('PIN_EXPIRY_MINUTES', 60))
     
     # Server settings - Default to network accessible
     FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')  # Allow external connections
@@ -79,10 +74,6 @@ class Config:
     SSL_ENABLED = os.environ.get('SSL_ENABLED', 'False').lower() == 'true'
     SSL_CERT_PATH = os.environ.get('SSL_CERT_PATH', 'certs/cert.pem')
     SSL_KEY_PATH = os.environ.get('SSL_KEY_PATH', 'certs/key.pem')
-    
-    # Logging
-    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-    LOG_FILE = os.environ.get('LOG_FILE', 'logs/quiz_app.log')
 
 class DevelopmentConfig(Config):
     """Development configuration."""

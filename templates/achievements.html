@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Achievements | Quiz Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kahoot-style.css') }}">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
+</head>
+<body>
+<div class="main-container">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle dark" id="themeToggle" onclick="toggleTheme()">
+        <span class="theme-icon sun-icon">☀️</span>
+        <span class="theme-icon moon-icon">🌙</span>
+    </div>
+
+    <h1>🏆 Achievement System</h1>
+    
+    {% if player_name %}
+    <div class="card">
+        <h2>Dein Fortschritt, {{ player_name }}!</h2>
+        <p style="color: var(--text-dim);">Sammle Achievements und zeige deine Quiz-Fähigkeiten!</p>
+    </div>
+    {% else %}
+    <div class="card">
+        <h2>🎯 Achievement System</h2>
+        <p style="color: var(--text-dim);">Spiele Quiz-Spiele und sammle Achievements für deine Erfolge!</p>
+        <p><a href="{{ url_for('player.index') }}" class="btn btn-primary">Jetzt Quiz spielen</a></p>
+    </div>
+    {% endif %}
+
+    <div class="achievements-panel">
+        <h2>🎖️ Alle Achievements</h2>
+        
+        <div class="achievement-grid">
+            {% for achievement in achievements %}
+            {% set user_ach = user_achievements|selectattr('achievement_id', 'eq', achievement.id)|first %}
+            {% set progress = user_progress.get(achievement.id, {}) %}
+            
+            <div class="achievement-card rarity-{{ achievement.rarity }} {{ 'unlocked' if user_ach else 'locked' }}">
+                <div class="achievement-icon">{{ achievement.icon }}</div>
+                <div class="achievement-name">{{ achievement.name }}</div>
+                <div class="achievement-desc">{{ achievement.description }}</div>
+                
+                {% if user_ach %}
+                <!-- Achievement unlocked -->
+                <div class="achievement-badge">
+                    ✨ Erreicht am {{ user_ach.unlocked_at.strftime('%d.%m.%Y') }}
+                </div>
+                <div style="color: var(--accent-gold); font-weight: 600;">
+                    +{{ achievement.points }} Punkte
+                </div>
+                {% elif progress %}
+                <!-- Show progress for locked achievements -->
+                <div class="achievement-progress">
+                    <div class="achievement-progress-bar" style="width: {{ progress.percentage }}%"></div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+                    {{ progress.current }} / {{ progress.required }} ({{ "%.0f"|format(progress.percentage) }}%)
+                </div>
+                {% else %}
+                <div style="color: var(--text-dim); font-style: italic;">
+                    Spiele mehr, um Fortschritt zu sehen!
+                </div>
+                {% endif %}
+                
+                <div class="achievement-meta" style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+                    {{ achievement.category|title }} • {{ achievement.rarity|title }} • {{ achievement.points }} Pts
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Achievement Rarity Legend -->
+    <div class="card">
+        <h3>🎨 Seltenheitsstufen</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+            <div class="rarity-common" style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--secondary-bg);">
+                <span style="color: #6c757d;">●</span> Common (1-20 Punkte)
+            </div>
+            <div class="rarity-rare" style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--secondary-bg);">
+                <span style="color: var(--accent-cyan);">●</span> Rare (25-40 Punkte)
+            </div>
+            <div class="rarity-epic" style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--secondary-bg);">
+                <span style="color: var(--accent-purple);">●</span> Epic (50-75 Punkte)
+            </div>
+            <div class="rarity-legendary" style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--secondary-bg);">
+                <span style="color: var(--accent-gold);">●</span> Legendary (100+ Punkte)
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('player.index') }}" class="btn btn-primary">🎯 Zurück zur Startseite</a>
+        <a href="{{ url_for('player.stats') }}" class="btn btn-warning">📊 Statistiken anzeigen</a>
+    </div>
+</div>
+
+<script>
+    // Theme toggle functionality
+    function toggleTheme() {
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.setAttribute('data-theme', newTheme);
+        themeToggle.className = `theme-toggle ${newTheme}`;
+        localStorage.setItem('theme', newTheme);
+    }
+    
+    // Initialize theme
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        
+        body.setAttribute('data-theme', savedTheme);
+        themeToggle.className = `theme-toggle ${savedTheme}`;
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initTheme();
+        
+        // Add hover effects to achievement cards
+        document.querySelectorAll('.achievement-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                if (this.classList.contains('unlocked')) {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

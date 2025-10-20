@@ -203,3 +203,74 @@ def next_question_api(pin):
     except Exception as e:
         logger.error(f"Error advancing to next question for game {pin}: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+
+
+@api_bp.route('/api/export/stats/<format>')
+def export_stats(format):
+    """Export statistics in various formats (CSV, JSON)."""
+    try:
+        from database import PlayerStats
+        import json
+        import csv
+        from io import StringIO
+        from flask import Response
+        
+        stats = PlayerStats.query.order_by(PlayerStats.played_at.desc()).limit(100).all()
+        
+        if format.lower() == 'json':
+            data = []
+            for stat in stats:
+                data.append({
+                    'player_name': stat.player_name,
+                    'score': stat.score,
+                    'total_questions': stat.total_questions,
+                    'percentage': stat.percentage,
+                    'difficulty': stat.difficulty,
+                    'language': stat.language,
+                    'avg_response_time': stat.avg_response_time,
+                    'streak': stat.streak,
+                    'played_at': stat.played_at.isoformat() if stat.played_at else None
+                })
+            
+            response = Response(
+                json.dumps(data, indent=2),
+                mimetype='application/json',
+                headers={'Content-Disposition': 'attachment; filename=quiz_stats.json'}
+            )
+            return response
+            
+        elif format.lower() == 'csv':
+            output = StringIO()
+            writer = csv.writer(output)
+            
+            # Write header
+            writer.writerow(['Player Name', 'Score', 'Total Questions', 'Percentage', 
+                           'Difficulty', 'Language', 'Avg Response Time', 'Streak', 'Played At'])
+            
+            # Write data
+            for stat in stats:
+                writer.writerow([
+                    stat.player_name,
+                    stat.score,
+                    stat.total_questions,
+                    stat.percentage,
+                    stat.difficulty or 'N/A',
+                    stat.language or 'N/A',
+                    stat.avg_response_time or 0,
+                    stat.streak or 0,
+                    stat.played_at.strftime('%Y-%m-%d %H:%M:%S') if stat.played_at else 'N/A'
+                ])
+            
+            response = Response(
+                output.getvalue(),
+                mimetype='text/csv',
+                headers={'Content-Disposition': 'attachment; filename=quiz_stats.csv'}
+            )
+            return response
+        
+        else:
+            return jsonify({'error': 'Unsupported format. Use json or csv.'}), 400
+            
+    except Exception as e:
+        logger.error(f"Error exporting stats: {e}")
+        return jsonify({'error': 'Internal server error'}), 500

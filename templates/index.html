@@ -10,6 +10,12 @@
 </head>
 <body>
 <div class="main-container">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle dark" id="themeToggle" onclick="toggleTheme()">
+        <span class="theme-icon sun-icon">☀️</span>
+        <span class="theme-icon moon-icon">🌙</span>
+    </div>
+
     <h1 class="fade-in">🎯 Interactive Quiz Game</h1>
     <p class="subtitle fade-in" style="text-align: center; font-size: 1.2rem; color: var(--text-dim); margin-bottom: 3rem; font-weight: 500; animation-delay: 0.2s;">
         Lernen, spielen und Spaß haben - im modernen Style!
@@ -48,15 +54,26 @@
             <a href="{{ url_for('host.host_dashboard') }}" class="btn btn-success">Quiz hosten</a>
         </div>
         <div class="dashboard-card">
-            <div class="dashboard-icon">📊</div>
+            <div class="dashboard-icon">📈</div>
             <h3>Statistiken</h3>
             <p>Verfolgen Sie Ihren Fortschritt und sehen Sie Ihre Erfolge.</p>
             <a href="{{ url_for('player.stats') }}" class="btn btn-danger">Statistiken</a>
         </div>
+        <div class="dashboard-card">
+            <div class="dashboard-icon">🏆</div>
+            <h3>Achievements</h3>
+            <p>Sammle Erfolge und schalte besondere Belohnungen frei.</p>
+            <a href="{{ url_for('player.achievements') }}" class="btn btn-primary">Achievements</a>
+        </div>
     </div>
 
     <div class="card slide-up" id="solo-form" style="animation-delay: 0.3s; display: none;">
-        <h2>🎮 Solo-Quiz starten</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 style="margin: 0;">🎮 Solo-Quiz starten</h2>
+            <button type="button" onclick="showDashboard()" class="btn btn-warning" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                ← Zurück
+            </button>
+        </div>
         <form action="{{ url_for('player.start_quiz') }}" method="post" class="loading-form">
             <div class="form-group">
                 <label class="form-label" for="player_name">👤 Dein Name</label>
@@ -102,18 +119,106 @@
     </div>
 </div>
 <script>
-    function showSoloForm() {
-        const o = document.getElementById("solo-form"), e = document.querySelector(".host-dashboard");
-        e.style.display = "none", o.style.display = "block", o.scrollIntoView({behavior: "smooth"})
+    // Theme toggle functionality
+    function toggleTheme() {
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.setAttribute('data-theme', newTheme);
+        themeToggle.className = `theme-toggle ${newTheme}`;
+        localStorage.setItem('theme', newTheme);
+    }
+    
+    // Initialize theme
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        
+        body.setAttribute('data-theme', savedTheme);
+        themeToggle.className = `theme-toggle ${savedTheme}`;
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".loading-form").forEach(o => {
-            o.addEventListener("submit", function (e) {
-                const t = this.querySelector(".submit-btn");
-                t && (t.innerHTML = "🔄 Wird geladen...", t.disabled = !0)
-            })
-        })
+    // Show solo form and hide dashboard
+    function showSoloForm() {
+        const soloForm = document.getElementById('solo-form');
+        const dashboard = document.querySelector('.host-dashboard');
+        
+        // Smooth transition
+        dashboard.style.transition = 'opacity 0.3s ease';
+        dashboard.style.opacity = '0';
+        
+        setTimeout(() => {
+            dashboard.style.display = 'none';
+            soloForm.style.display = 'block';
+            soloForm.style.opacity = '0';
+            soloForm.style.transition = 'opacity 0.3s ease';
+            
+            // Smooth scroll and fade in
+            soloForm.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                soloForm.style.opacity = '1';
+                // Focus first input
+                const firstInput = soloForm.querySelector('input[type="text"]');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }, 300);
+    }
+
+    // Back to dashboard function
+    function showDashboard() {
+        const soloForm = document.getElementById('solo-form');
+        const dashboard = document.querySelector('.host-dashboard');
+        
+        soloForm.style.opacity = '0';
+        setTimeout(() => {
+            soloForm.style.display = 'none';
+            dashboard.style.display = 'grid';
+            dashboard.style.opacity = '1';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize theme
+        initTheme();
+        
+        // Add loading states to forms
+        document.querySelectorAll('.loading-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                const submitBtn = this.querySelector('.submit-btn');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '🔄 Wird geladen...';
+                    submitBtn.disabled = true;
+                }
+            });
+        });
+        
+        // Add hover effects to dashboard cards
+        document.querySelectorAll('.dashboard-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+                this.style.boxShadow = '0 12px 25px rgba(0, 255, 255, 0.2)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                this.style.boxShadow = '';
+            });
+        });
+        
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            // ESC key to go back to dashboard
+            if (event.key === 'Escape') {
+                const soloForm = document.getElementById('solo-form');
+                if (soloForm.style.display !== 'none' && soloForm.style.display !== '') {
+                    showDashboard();
+                }
+            }
+        });
     });
 </script>
 </body>
